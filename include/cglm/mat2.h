@@ -13,22 +13,22 @@
    GLM_MAT2_ZERO
 
  Functions:
-   CGLM_INLINE void  glm_mat2_copy(mat2 mat, mat2 dest)
-   CGLM_INLINE void  glm_mat2_identity(mat2 mat)
-   CGLM_INLINE void  glm_mat2_identity_array(mat2 * restrict mat, size_t count)
-   CGLM_INLINE void  glm_mat2_zero(mat2 mat)
+   CGLM_INLINE void  glm_mat2_make(float * restrict src, mat2 dest)
+   CGLM_INLINE void  glm_mat2_copy(mat2 src, mat2 dest)
+   CGLM_INLINE void  glm_mat2_identity(mat2 m)
+   CGLM_INLINE void  glm_mat2_identity_array(mat2 * restrict m, size_t count)
+   CGLM_INLINE void  glm_mat2_zero(mat2 m)
    CGLM_INLINE void  glm_mat2_mul(mat2 m1, mat2 m2, mat2 dest)
+   CGLM_INLINE void  glm_mat2_mulv(mat2 m, vec2 v, vec2 dest)
    CGLM_INLINE void  glm_mat2_transpose_to(mat2 m, mat2 dest)
    CGLM_INLINE void  glm_mat2_transpose(mat2 m)
-   CGLM_INLINE void  glm_mat2_mulv(mat2 m, vec2 v, vec2 dest)
-   CGLM_INLINE float glm_mat2_trace(mat2 m)
    CGLM_INLINE void  glm_mat2_scale(mat2 m, float s)
-   CGLM_INLINE float glm_mat2_det(mat2 mat)
-   CGLM_INLINE void  glm_mat2_inv(mat2 mat, mat2 dest)
-   CGLM_INLINE void  glm_mat2_swap_col(mat2 mat, int col1, int col2)
-   CGLM_INLINE void  glm_mat2_swap_row(mat2 mat, int row1, int row2)
+   CGLM_INLINE void  glm_mat2_inv(mat2 src, mat2 dest)
+   CGLM_INLINE void  glm_mat2_swap_col(mat2 m, int col1, int col2)
+   CGLM_INLINE void  glm_mat2_swap_row(mat2 m, int row1, int row2)
+   CGLM_INLINE float glm_mat2_det(mat2 m)
+   CGLM_INLINE float glm_mat2_trace(mat2 m)
    CGLM_INLINE float glm_mat2_rmc(vec2 r, mat2 m, vec2 c)
-   CGLM_INLINE void  glm_mat2_make(float * restrict src, mat2 dest)
  */
 
 #ifndef cglm_mat2_h
@@ -55,6 +55,21 @@
 /* for C only */
 #define GLM_MAT2_IDENTITY ((mat2)GLM_MAT2_IDENTITY_INIT)
 #define GLM_MAT2_ZERO     ((mat2)GLM_MAT2_ZERO_INIT)
+
+/*!
+ * @brief Create mat2 matrix from pointer
+ *
+ * @param[in]  src  pointer to an array of floats
+ * @param[out] dest matrix
+ */
+CGLM_INLINE
+void
+glm_mat2_make(const float * __restrict src, mat2 dest) {
+  dest[0][0] = src[0];
+  dest[0][1] = src[1];
+  dest[1][0] = src[2];
+  dest[1][1] = src[3];
+}
 
 /*!
  * @brief copy all members of [mat] to [dest]
@@ -157,6 +172,20 @@ glm_mat2_mul(mat2 m1, mat2 m2, mat2 dest) {
 }
 
 /*!
+ * @brief multiply mat2 with vec2 (column vector) and store in dest vector
+ *
+ * @param[in]  m    mat2 (left)
+ * @param[in]  v    vec2 (right, column vector)
+ * @param[out] dest vec2 (result, column vector)
+ */
+CGLM_INLINE
+void
+glm_mat2_mulv(mat2 m, vec2 v, vec2 dest) {
+  dest[0] = m[0][0] * v[0] + m[1][0] * v[1];
+  dest[1] = m[0][1] * v[0] + m[1][1] * v[1];
+}
+
+/*!
  * @brief transpose mat2 and store in dest
  *
  * source matrix will not be transposed unless dest is m
@@ -194,33 +223,6 @@ glm_mat2_transpose(mat2 m) {
 }
 
 /*!
- * @brief multiply mat2 with vec2 (column vector) and store in dest vector
- *
- * @param[in]  m    mat2 (left)
- * @param[in]  v    vec2 (right, column vector)
- * @param[out] dest vec2 (result, column vector)
- */
-CGLM_INLINE
-void
-glm_mat2_mulv(mat2 m, vec2 v, vec2 dest) {
-  dest[0] = m[0][0] * v[0] + m[1][0] * v[1];
-  dest[1] = m[0][1] * v[0] + m[1][1] * v[1];
-}
-
-/*!
- * @brief trace of matrix
- *
- * sum of the elements on the main diagonal from upper left to the lower right
- *
- * @param[in]  m matrix
- */
-CGLM_INLINE
-float
-glm_mat2_trace(mat2 m) {
-  return m[0][0] + m[1][1];
-}
-
-/*!
  * @brief scale (multiply with scalar) matrix
  *
  * multiply matrix with scalar
@@ -247,19 +249,6 @@ glm_mat2_scale(mat2 m, float s) {
 }
 
 /*!
- * @brief mat2 determinant
- *
- * @param[in] mat matrix
- *
- * @return determinant
- */
-CGLM_INLINE
-float
-glm_mat2_det(mat2 mat) {
-  return mat[0][0] * mat[1][1] - mat[1][0] * mat[0][1];
-}
-
-/*!
  * @brief inverse mat2 and store in dest
  *
  * @param[in]  mat  matrix
@@ -267,10 +256,10 @@ glm_mat2_det(mat2 mat) {
  */
 CGLM_INLINE
 void
-glm_mat2_inv(mat2 mat, mat2 dest) {
+glm_mat2_inv(mat2 src, mat2 dest) {
   float det;
-  float a = mat[0][0], b = mat[0][1],
-        c = mat[1][0], d = mat[1][1];
+  float a = src[0][0], b = src[0][1],
+        c = src[1][0], d = src[1][1];
 
   det = 1.0f / (a * d - b * c);
 
@@ -289,17 +278,17 @@ glm_mat2_inv(mat2 mat, mat2 dest) {
  */
 CGLM_INLINE
 void
-glm_mat2_swap_col(mat2 mat, int col1, int col2) {
+glm_mat2_swap_col(mat2 m, int col1, int col2) {
   float a, b;
 
-  a = mat[col1][0];
-  b = mat[col1][1];
+  a = m[col1][0];
+  b = m[col1][1];
 
-  mat[col1][0] = mat[col2][0];
-  mat[col1][1] = mat[col2][1];
+  m[col1][0] = m[col2][0];
+  m[col1][1] = m[col2][1];
 
-  mat[col2][0] = a;
-  mat[col2][1] = b;
+  m[col2][0] = a;
+  m[col2][1] = b;
 }
 
 /*!
@@ -311,17 +300,43 @@ glm_mat2_swap_col(mat2 mat, int col1, int col2) {
  */
 CGLM_INLINE
 void
-glm_mat2_swap_row(mat2 mat, int row1, int row2) {
+glm_mat2_swap_row(mat2 m, int row1, int row2) {
   float a, b;
 
-  a = mat[0][row1];
-  b = mat[1][row1];
+  a = m[0][row1];
+  b = m[1][row1];
 
-  mat[0][row1] = mat[0][row2];
-  mat[1][row1] = mat[1][row2];
+  m[0][row1] = m[0][row2];
+  m[1][row1] = m[1][row2];
 
-  mat[0][row2] = a;
-  mat[1][row2] = b;
+  m[0][row2] = a;
+  m[1][row2] = b;
+}
+
+/*!
+ * @brief mat2 determinant
+ *
+ * @param[in] mat matrix
+ *
+ * @return determinant
+ */
+CGLM_INLINE
+float
+glm_mat2_det(mat2 m) {
+  return m[0][0] * m[1][1] - m[1][0] * m[0][1];
+}
+
+/*!
+ * @brief trace of matrix
+ *
+ * sum of the elements on the main diagonal from upper left to the lower right
+ *
+ * @param[in]  m matrix
+ */
+CGLM_INLINE
+float
+glm_mat2_trace(mat2 m) {
+  return m[0][0] + m[1][1];
 }
 
 /*!
@@ -344,21 +359,6 @@ glm_mat2_rmc(vec2 r, mat2 m, vec2 c) {
   vec2 tmp;
   glm_mat2_mulv(m, c, tmp);
   return glm_vec2_dot(r, tmp);
-}
-
-/*!
- * @brief Create mat2 matrix from pointer
- *
- * @param[in]  src  pointer to an array of floats
- * @param[out] dest matrix
- */
-CGLM_INLINE
-void
-glm_mat2_make(const float * __restrict src, mat2 dest) {
-  dest[0][0] = src[0];
-  dest[0][1] = src[1];
-  dest[1][0] = src[2];
-  dest[1][1] = src[3];
 }
 
 #endif /* cglm_mat2_h */
