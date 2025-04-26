@@ -956,13 +956,70 @@ Functions documentation
         "row 2", "8.00", "16.00", "13.00"
         "row 3", "5.00", "25.00", "7.00"
 
-.. c:function:: void glm_mat3_quat(mat3 m, versor dest)
+.. c:function:: void glm_mat3_quat(mat3 mat, versor dest)
 
-    convert mat3 to quaternion
+    Convert mat3 (mat) to quaternion (dest).
 
     Parameters:
-      | *[in]*  **m**     rotation matrix
-      | *[out]* **dest**  destination quaternion
+      | *[in]*  **mat**  mat3 rotation matrix (src)
+      | *[out]* **dest** destination quaternion (result, versor)
+
+    .. note:: Mathematical explanation
+
+    .. csv-table:: mat3 **(mat)** Before
+        :header: "", "column 1", "column 2", "column 3"
+
+        "row 1", "m00", "m10", "m20"
+        "row 2", "m01", "m11", "m21"
+        "row 3", "m02", "m12", "m22"
+
+    .. code-block:: c
+
+        if (m00 + m11 + m22 >= 0.0f)
+
+    .. csv-table:: versor **(dest)** After
+        :header: "", "column 1"
+
+        "row 1 (x)", "(0.5f / sqrt(1.0f + m00 + m11 + m22)) * (m12 - m21)"
+        "row 2 (y)", "(0.5f / sqrt(1.0f + m00 + m11 + m22)) * (m20 - m02)"
+        "row 3 (z)", "(0.5f / sqrt(1.0f + m00 + m11 + m22)) * (m01 - m10)"
+        "row 4 (w)", "sqrt(1.0f + m00 + m11 + m22) * 0.5f"
+
+    .. code-block:: c
+
+        else if (m00 >= m11 && m00 >= m22)
+
+    .. csv-table:: versor **(dest)** After
+        :header: "", "column 1"
+
+        "row 1 (x)", "sqrt(1.0f - m11 - m22 + m00) * 0.5f"
+        "row 2 (y)", "(0.5f / sqrt(1.0f - m11 - m22 + m00)) * (m01 + m10)"
+        "row 3 (z)", "(0.5f / sqrt(1.0f - m11 - m22 + m00)) * (m02 + m20)"
+        "row 4 (w)", "(0.5f / sqrt(1.0f - m11 - m22 + m00)) * (m12 - m21)"
+
+    .. code-block:: c
+
+        else if (m11 >= m22)
+
+    .. csv-table:: versor **(dest)** After
+        :header: "", "column 1"
+
+        "row 1 (x)", "(0.5f / sqrt(1.0f - m00 - m22 + m11)) * (m01 + m10)"
+        "row 2 (y)", "sqrt(1.0f - m00 - m22 + m11) * 0.5f"
+        "row 3 (z)", "(0.5f / sqrt(1.0f - m00 - m22 + m11)) * (m12 + m21)"
+        "row 4 (w)", "(0.5f / sqrt(1.0f - m00 - m22 + m11)) * (m20 - m02)"
+
+    .. code-block:: c
+
+        else
+
+    .. csv-table:: versor **(dest)** After
+        :header: "", "column 1"
+
+        "row 1 (x)", "(0.5f / sqrt(1.0f - m00 - m11 + m22)) * (m02 + m20)"
+        "row 3 (y)", "(0.5f / sqrt(1.0f - m00 - m11 + m22)) * (m12 + m21)"
+        "row 2 (z)", "sqrt(1.0f - m00 - m11 + m22) * 0.5f"
+        "row 4 (w)", "(0.5f / sqrt(1.0f - m00 - m11 + m22)) * (m01 - m10)"
 
 .. c:function:: void glm_mat3_textrans(float sx, float sy, float rot, float tx, float ty, mat3 dest) 
   
